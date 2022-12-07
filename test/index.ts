@@ -18,6 +18,9 @@ describe("socket.io", () => {
   require("./socket-middleware");
   require("./v2-compatibility");
   require("./socket-timeout");
-  require("./uws");
   require("./utility-methods");
+
+  if (!process.version.startsWith("v12")) {
+    require("./uws");
+  }
 });
