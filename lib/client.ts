@@ -314,7 +314,10 @@ export class Client<
    * @param description
    * @private
    */
-  private onclose(reason: CloseReason | "forced server close", description?: any): void {
+  private onclose(
+    reason: CloseReason | "forced server close",
+    description?: any
+  ): void {
     debug("client close with reason %s", reason);
 
     // ignore a potential subsequent `close` event
