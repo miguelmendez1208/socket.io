@@ -9,6 +9,12 @@
         @select="onSelectUser(user)"
       />
     </div>
+    <chess-vue 
+    v-if="selectedUser"
+    :user="selectedUser"
+    @chess="onChessMove"
+    class="middle-panel"
+    />
     <message-panel
       v-if="selectedUser"
       :user="selectedUser"
@@ -22,10 +28,11 @@
 import socket from "../socket";
 import User from "./User";
 import MessagePanel from "./MessagePanel";
+import chessVue from "./chessVue.vue";
 
 export default {
   name: "Chat",
-  components: { User, MessagePanel },
+  components: { User, MessagePanel, chessVue },
   data() {
     return {
       selectedUser: null,
@@ -43,6 +50,29 @@ export default {
           content,
           fromSelf: true,
         });
+      }
+    },
+    onChessMove(content){ //OnChessMove Client (sender)
+      //if (this.selectedUser) {
+      //  socket.emit("private message", {
+      //    content,
+      //    to: this.selectedUser.userID,
+      //  });
+      //  this.selectedUser.messages.push({
+      //    content,
+      //    fromSelf: true,
+      //  });
+      //}
+      if(this.selectedUser){
+        socket.emit("chess move", {
+          content,
+          to: this.selectedUser.userID,
+        });
+        this.selectedUser.fenMsgs.push({
+          content,
+          fromSelf: true,
+        });
+        //this.selectedUser.fenCurrent=content;
       }
     },
     onSelectUser(user) {
@@ -71,6 +101,8 @@ export default {
       user.connected = true;
       user.messages = [];
       user.hasNewMessages = false;
+      user.fenMsgs = [];
+      user.fenCurrent = '';
     };
 
     socket.on("users", (users) => {
@@ -117,6 +149,29 @@ export default {
         }
       }
     });
+
+    socket.on("chess move", ({ content, from }) => {
+      for (let i = 0; i < this.users.length; i++) {
+        const user = this.users[i];
+        if (user.userID === from) {
+          user.fenMsgs.push({ //fen msgs
+            content,
+            fromSelf: false,
+          });
+          if(user.fenCurrent!=content){
+          user.fenCurrent=content;
+          }
+          //user.messages.push({
+          //  content,
+          //  fromSelf: false,
+          //});
+          if (user !== this.selectedUser) {
+            user.hasNewMessages = true;
+          }
+          break;
+        }
+      }
+    });
   },
   destroyed() {
     socket.off("connect");
@@ -141,6 +196,11 @@ export default {
   color: white;
 }
 
+.middle-panel {
+  margin-left: 30%;
+ 
+  
+}
 .right-panel {
   margin-left: 260px;
 }

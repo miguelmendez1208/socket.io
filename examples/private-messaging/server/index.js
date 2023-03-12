@@ -39,6 +39,14 @@ io.on("connection", (socket) => {
     });
   });
 
+  //forward the chess move
+  socket.on("chess move", ({ content, to}) => {
+    socket.to(to).emit("chess move", {
+      content,
+      from: socket.id,
+    });
+  });
+
   // notify users upon disconnection
   socket.on("disconnect", () => {
     socket.broadcast.emit("user disconnected", socket.id);
